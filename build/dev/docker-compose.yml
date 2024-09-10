@@ -26,7 +26,8 @@ services:
 
   avitoapp:
     image: avitoapp
-    build: .
+    build:
+      context: ../../
     environment:
       MODE: "dev"
       SERVER_ADDRESS: ${SERVER_ADDRESS}
