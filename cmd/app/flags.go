@@ -1,13 +1,12 @@
 package main
 
 import (
-	"os"
-
 	"avito/tender/internal/app"
+	"os"
 )
 
 const (
-	// defaultAddr = ":8080"
+	defaultAddr = ":8080"
 
 	envServerAddress = "SERVER_ADDRESS"
 	envPostgresConn  = "POSTGRES_CONN"
