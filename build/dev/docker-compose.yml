@@ -1,4 +1,3 @@
-version: "3"
 services:
   postgres:
     container_name: avito-pg
@@ -28,6 +27,10 @@ services:
   avitoapp:
     image: avitoapp
     build: .
+    environment:
+      MODE: "dev"
+      SERVER_ADDRESS: ${SERVER_ADDRESS}
+      POSTGRES_CONN: ${POSTGRES_CONN}
     depends_on:
       postgres:
         condition: service_healthy
