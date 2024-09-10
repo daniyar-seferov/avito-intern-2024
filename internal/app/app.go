@@ -1,11 +1,14 @@
 package app
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"time"
 
 	appHttp "avito/tender/internal/app/http"
+
+	pgxv5 "github.com/jackc/pgx/v5"
 )
 
 type (
@@ -26,6 +29,17 @@ type (
 
 func NewApp(config config) (*App, error) {
 	var mux = http.NewServeMux()
+
+	ctx := context.Background()
+	conn, err := pgxv5.Connect(ctx, config.dbConnStr)
+	if err != nil {
+		return nil, err
+	}
+
+	err = conn.Ping(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	return &App{
 		config: config,

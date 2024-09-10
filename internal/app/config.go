@@ -8,21 +8,24 @@ const urlPrefix = "/api"
 
 type (
 	Options struct {
-		Addr string
+		Addr      string
+		DBConnStr string
 	}
 
 	path struct {
 		ping string
 	}
 	config struct {
-		addr string
-		path path
+		addr      string
+		dbConnStr string
+		path      path
 	}
 )
 
 func NewConfig(opts Options) config {
 	return config{
-		addr: opts.Addr,
+		addr:      opts.Addr,
+		dbConnStr: opts.DBConnStr,
 		path: path{
 			ping: fmt.Sprintf("GET %s/ping", urlPrefix),
 		},
