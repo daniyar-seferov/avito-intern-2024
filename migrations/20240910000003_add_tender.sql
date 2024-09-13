@@ -1,17 +1,28 @@
 -- +goose Up
 -- +goose StatementBegin
 
-CREATE TYPE tender_status AS ENUM (
-    'CREATED',    
-    'PUBLISHED',  
-    'CLOSED'
-);
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'tender_status') THEN
+        CREATE TYPE tender_status AS ENUM (
+            'CREATED',    
+            'PUBLISHED',  
+            'CLOSED'
+        );
+    END IF;
+END $$;
 
-CREATE TYPE service_type AS ENUM (
-    'CONSTRUCTION',    
-    'DELIVERY',  
-    'MANUFACTURE'
-);
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'service_type') THEN
+        CREATE TYPE service_type AS ENUM (
+            'CONSTRUCTION',    
+            'DELIVERY',  
+            'MANUFACTURE'
+        );
+    END IF;
+END $$;
+
 
 CREATE TABLE tender (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
