@@ -2,11 +2,15 @@ package app
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
 
 	appHttp "avito/tender/internal/app/http"
+	"avito/tender/internal/domain"
+	tenders_new "avito/tender/internal/handlers/tenders/new"
+	db_pgx_repo "avito/tender/internal/repository/pgx"
 
 	pgxv5 "github.com/jackc/pgx/v5"
 )
@@ -17,13 +21,20 @@ type (
 	}
 	server interface {
 		ListenAndServe() error
-		Close() error
+		Shutdown(ctx context.Context) error
+	}
+	tenderStorage interface {
+		AddTender(ctx context.Context, item domain.TenderAddDTO) (string, error)
+		GetUserOrganizationId(ctx context.Context, username string) (string, string, error)
+		GetTender(ctx context.Context, tenderId string) (domain.TenderAddDTO, error)
 	}
 
 	App struct {
-		config config
-		mux    mux
-		server server
+		config  config
+		mux     mux
+		server  server
+		dbConn  *pgxv5.Conn
+		storage tenderStorage
 	}
 )
 
@@ -42,20 +53,34 @@ func NewApp(config config) (*App, error) {
 	}
 
 	return &App{
-		config: config,
-		mux:    mux,
-		server: &http.Server{Addr: config.addr, Handler: wrapLogger(mux)},
+		config:  config,
+		mux:     mux,
+		server:  &http.Server{Addr: config.addr, Handler: wrapLogger(mux)},
+		dbConn:  conn,
+		storage: db_pgx_repo.NewRepo(conn),
 	}, nil
 }
 
 func (a *App) ListenAndServe() error {
 	a.mux.Handle(a.config.path.ping, appHttp.NewPingHandler())
+	a.mux.Handle(a.config.path.tendersAdd, appHttp.NewTendersAddHandler(tenders_new.New(a.storage), a.config.path.tendersAdd))
 
 	return a.server.ListenAndServe()
 }
 
 func (a *App) Close() error {
-	return a.server.Close()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := a.server.Shutdown(ctx); err != nil {
+		return fmt.Errorf("shutdown error: %v", err)
+	}
+
+	if err := a.dbConn.Close(ctx); err != nil {
+		return fmt.Errorf("failed to close the database connection: %v", err)
+	}
+
+	return nil
 }
 
 func wrapLogger(next http.Handler) http.Handler {
