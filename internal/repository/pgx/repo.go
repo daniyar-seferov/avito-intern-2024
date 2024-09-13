@@ -116,3 +116,43 @@ func (r *Repo) GetTenderList(ctx context.Context, serviceTypes []string, limit i
 
 	return tenders, nil
 }
+
+func (r *Repo) GetUsersTenders(ctx context.Context, uid string, limit int, offset int) ([]domain.TenderAddDTO, error) {
+	var query = `
+	SELECT id, name, description, status, type, version, created_at 
+	FROM tender 
+	WHERE user_id=$1`
+
+	var (
+		args    []interface{}
+		tenders []domain.TenderAddDTO
+	)
+	args = append(args, uid)
+
+	if limit > 0 {
+		query += " LIMIT $" + fmt.Sprint(len(args)+1)
+		args = append(args, limit)
+	}
+	if offset > 0 {
+		query += " OFFSET $" + fmt.Sprint(len(args)+1)
+		args = append(args, offset)
+	}
+
+	rows, err := r.conn.Query(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		tender := domain.TenderAddDTO{}
+		err := rows.Scan(&tender.ID, &tender.Name, &tender.Description, &tender.Status, &tender.ServiceType, &tender.Version, &tender.CreatedAt)
+		if err != nil {
+			fmt.Printf("GetUsersTenders rows.Scan error: %v", err)
+			continue
+		}
+		tenders = append(tenders, tender)
+	}
+	rows.Close()
+
+	return tenders, nil
+}

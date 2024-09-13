@@ -1,15 +1,15 @@
-package tenders_list
+package tenders_my
 
 import (
 	"avito/tender/internal/domain"
 	"context"
-	"strings"
 	"time"
 )
 
 type (
 	repository interface {
-		GetTenderList(ctx context.Context, serviceTypes []string, limit int, offset int) ([]domain.TenderAddDTO, error)
+		GetUserOrganizationId(ctx context.Context, username string) (string, string, error)
+		GetUsersTenders(ctx context.Context, username string, limit int, offset int) ([]domain.TenderAddDTO, error)
 	}
 
 	Handler struct {
@@ -23,13 +23,13 @@ func New(repo repository) *Handler {
 	}
 }
 
-func (h *Handler) ListTender(ctx context.Context, serviceType []string, limit int, offset int) ([]domain.TenderAddResponse, error) {
-	servDBTypes := make([]string, 0, len(serviceType))
-	for _, servType := range serviceType {
-		servDBTypes = append(servDBTypes, strings.ToUpper(servType))
+func (h *Handler) MyTenders(ctx context.Context, username string, limit int, offset int) ([]domain.TenderAddResponse, error) {
+	uid, _, err := h.repo.GetUserOrganizationId(ctx, username)
+	if err != nil {
+		return nil, err
 	}
 
-	tenders, err := h.repo.GetTenderList(ctx, servDBTypes, limit, offset)
+	tenders, err := h.repo.GetUsersTenders(ctx, uid, limit, offset)
 	if err != nil {
 		return nil, err
 	}

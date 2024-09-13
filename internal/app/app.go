@@ -10,6 +10,7 @@ import (
 	appHttp "avito/tender/internal/app/http"
 	"avito/tender/internal/domain"
 	tenders_list "avito/tender/internal/handlers/tenders/list"
+	tenders_my "avito/tender/internal/handlers/tenders/my"
 	tenders_new "avito/tender/internal/handlers/tenders/new"
 	db_pgx_repo "avito/tender/internal/repository/pgx"
 
@@ -29,6 +30,7 @@ type (
 		GetUserOrganizationId(ctx context.Context, username string) (string, string, error)
 		GetTender(ctx context.Context, tenderId string) (domain.TenderAddDTO, error)
 		GetTenderList(ctx context.Context, serviceTypes []string, limit int, offset int) ([]domain.TenderAddDTO, error)
+		GetUsersTenders(ctx context.Context, username string, limit int, offset int) ([]domain.TenderAddDTO, error)
 	}
 
 	App struct {
@@ -67,6 +69,7 @@ func (a *App) ListenAndServe() error {
 	a.mux.Handle(a.config.path.ping, appHttp.NewPingHandler())
 	a.mux.Handle(a.config.path.tendersAdd, appHttp.NewTendersAddHandler(tenders_new.New(a.storage), a.config.path.tendersAdd))
 	a.mux.Handle(a.config.path.tendersList, appHttp.NewTendersListHandler(tenders_list.New(a.storage), a.config.path.tendersList))
+	a.mux.Handle(a.config.path.tendersMy, appHttp.NewTendersMyHandler(tenders_my.New(a.storage), a.config.path.tendersList))
 
 	return a.server.ListenAndServe()
 }

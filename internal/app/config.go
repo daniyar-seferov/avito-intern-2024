@@ -13,7 +13,7 @@ type (
 	}
 
 	path struct {
-		ping, tendersAdd, tendersList string
+		ping, tendersAdd, tendersList, tendersMy string
 	}
 	config struct {
 		addr      string
@@ -30,6 +30,7 @@ func NewConfig(opts Options) config {
 			ping:        fmt.Sprintf("GET %s/ping", urlPrefix),
 			tendersAdd:  fmt.Sprintf("POST %s/tenders/new", urlPrefix),
 			tendersList: fmt.Sprintf("GET %s/tenders", urlPrefix),
+			tendersMy:   fmt.Sprintf("GET %s/tenders/my", urlPrefix),
 		},
 	}
 }
