@@ -4,6 +4,8 @@ import (
 	"avito/tender/internal/domain"
 	app_errors "avito/tender/internal/errors"
 	"context"
+	"fmt"
+	"strings"
 
 	"github.com/jackc/pgx/v5"
 )
@@ -66,4 +68,51 @@ func (r *Repo) GetTender(ctx context.Context, tenderId string) (domain.TenderAdd
 	tender.ID = tenderId
 
 	return tender, nil
+}
+
+func (r *Repo) GetTenderList(ctx context.Context, serviceTypes []string, limit int, offset int) ([]domain.TenderAddDTO, error) {
+	var query = `
+	SELECT id, name, description, status, type, version, created_at 
+	FROM tender`
+
+	var (
+		args    []interface{}
+		tenders []domain.TenderAddDTO
+	)
+
+	if len(serviceTypes) > 0 {
+		placeholders := make([]string, len(serviceTypes))
+		for pos, serviceType := range serviceTypes {
+			placeholders[pos] = fmt.Sprintf("$%d", pos+1)
+			args = append(args, serviceType)
+		}
+		query += " WHERE type IN (" + strings.Join(placeholders, ", ") + ")"
+	}
+
+	if limit > 0 {
+		query += " LIMIT $" + fmt.Sprint(len(args)+1)
+		args = append(args, limit)
+	}
+	if offset > 0 {
+		query += " OFFSET $" + fmt.Sprint(len(args)+1)
+		args = append(args, offset)
+	}
+
+	rows, err := r.conn.Query(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		tender := domain.TenderAddDTO{}
+		err := rows.Scan(&tender.ID, &tender.Name, &tender.Description, &tender.Status, &tender.ServiceType, &tender.Version, &tender.CreatedAt)
+		if err != nil {
+			fmt.Printf("GetTenderList rows.Scan error: %v", err)
+			continue
+		}
+		tenders = append(tenders, tender)
+	}
+	rows.Close()
+
+	return tenders, nil
 }
