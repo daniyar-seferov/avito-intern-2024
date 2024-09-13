@@ -15,6 +15,7 @@ FROM alpine
 
 COPY --from=builder /app/build /build
 COPY --from=builder /app/bin/app /app
+COPY --from=builder /app/migrations /migrations
 
 EXPOSE 8080
 

@@ -34,8 +34,16 @@ type (
 	}
 )
 
-var ServiceTypeMap = map[string]string{
-	"CONSTRUCTION": "Construction",
-	"DELIVERY":     "Delivery",
-	"MANUFACTURE":  "Manufacture",
-}
+var (
+	ServiceTypeMap = map[string]string{
+		"CONSTRUCTION": "Construction",
+		"DELIVERY":     "Delivery",
+		"MANUFACTURE":  "Manufacture",
+	}
+
+	TenderStatusMap = map[string]string{
+		"CREATED":   "Created",
+		"PUBLISHED": "Published",
+		"CLOSED":    "Closed",
+	}
+)

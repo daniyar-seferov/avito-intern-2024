@@ -5,7 +5,8 @@ ENV_NAME="avito-tender"
 APP_NAME="avitoapp"
 MIGRATE_DIR=${CURDIR}/migrations
 
--include ./build/dev/.env
+# -include ./build/dev/.env
+-include ./build/prod/.env
 
 .PHONY: compose-up
 compose-up:
@@ -61,3 +62,13 @@ goose-migrate-down:
 		password=${POSTGRES_PASSWORD}\
 		port=${POSTGRES_PORT}\
 		sslmode=disable" down
+
+.PHONY: goose-migrate-prod-up
+goose-migrate-prod-up:
+	${BIN_DIR}/goose -dir ${MIGRATE_DIR} postgres "\
+		user=${POSTGRES_USERNAME}\
+		dbname=${POSTGRES_DATABASE}\
+		password=${POSTGRES_PASSWORD}\
+		port=${POSTGRES_PORT}\
+		host=${POSTGRES_HOST}\
+		sslmode=disable" up

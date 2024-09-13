@@ -14,6 +14,7 @@ import (
 
 func main() {
 	initOpts()
+	initMigration(opts.DBConnStr)
 	service, err := app.NewApp(app.NewConfig(opts))
 	if err != nil {
 		log.Fatal("{FATAL} ", err)

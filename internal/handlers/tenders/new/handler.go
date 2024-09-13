@@ -59,8 +59,8 @@ func (h *Handler) AddTender(ctx context.Context, tender domain.TenderAddRequest)
 		ID:          tenderDB.ID,
 		Name:        tenderDB.Name,
 		Description: tenderDB.Description,
-		Status:      tenderDB.Status,
-		ServiceType: tenderDB.ServiceType,
+		Status:      domain.TenderStatusMap[tenderDB.Status],
+		ServiceType: domain.ServiceTypeMap[tenderDB.ServiceType],
 		Version:     tenderDB.Version,
 		CreatedAt:   tenderDB.CreatedAt.Format(time.RFC3339),
 	}
