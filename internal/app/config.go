@@ -13,7 +13,7 @@ type (
 	}
 
 	path struct {
-		ping, tendersAdd, tendersList, tendersMy string
+		ping, tendersAdd, tendersList, tendersMy, tendersStatus string
 	}
 	config struct {
 		addr      string
@@ -27,10 +27,11 @@ func NewConfig(opts Options) config {
 		addr:      opts.Addr,
 		dbConnStr: opts.DBConnStr,
 		path: path{
-			ping:        fmt.Sprintf("GET %s/ping", urlPrefix),
-			tendersAdd:  fmt.Sprintf("POST %s/tenders/new", urlPrefix),
-			tendersList: fmt.Sprintf("GET %s/tenders", urlPrefix),
-			tendersMy:   fmt.Sprintf("GET %s/tenders/my", urlPrefix),
+			ping:          fmt.Sprintf("GET %s/ping", urlPrefix),
+			tendersAdd:    fmt.Sprintf("POST %s/tenders/new", urlPrefix),
+			tendersList:   fmt.Sprintf("GET %s/tenders", urlPrefix),
+			tendersMy:     fmt.Sprintf("GET %s/tenders/my", urlPrefix),
+			tendersStatus: fmt.Sprintf("GET %s/tenders/{tenderId}/status", urlPrefix),
 		},
 	}
 }

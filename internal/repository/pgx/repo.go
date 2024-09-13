@@ -56,12 +56,15 @@ func (r *Repo) GetUserOrganizationId(ctx context.Context, username string) (stri
 
 func (r *Repo) GetTender(ctx context.Context, tenderId string) (domain.TenderAddDTO, error) {
 	const query = `
-	SELECT name, description, status, type, version, created_at 
+	SELECT organization_id, user_id, name, description, status, type, version, created_at 
 	FROM tender WHERE id=$1;`
 
 	tender := domain.TenderAddDTO{}
 
-	err := r.conn.QueryRow(ctx, query, tenderId).Scan(&tender.Name, &tender.Description, &tender.Status, &tender.ServiceType, &tender.Version, &tender.CreatedAt)
+	err := r.conn.QueryRow(ctx, query, tenderId).Scan(&tender.OrganizationId, &tender.UserId, &tender.Name, &tender.Description, &tender.Status, &tender.ServiceType, &tender.Version, &tender.CreatedAt)
+	if err == pgx.ErrNoRows {
+		return tender, app_errors.ErrTenderId
+	}
 	if err != nil {
 		return tender, err
 	}

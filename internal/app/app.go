@@ -12,6 +12,7 @@ import (
 	tenders_list "avito/tender/internal/handlers/tenders/list"
 	tenders_my "avito/tender/internal/handlers/tenders/my"
 	tenders_new "avito/tender/internal/handlers/tenders/new"
+	tenders_status "avito/tender/internal/handlers/tenders/status"
 	db_pgx_repo "avito/tender/internal/repository/pgx"
 
 	pgxv5 "github.com/jackc/pgx/v5"
@@ -70,6 +71,7 @@ func (a *App) ListenAndServe() error {
 	a.mux.Handle(a.config.path.tendersAdd, appHttp.NewTendersAddHandler(tenders_new.New(a.storage), a.config.path.tendersAdd))
 	a.mux.Handle(a.config.path.tendersList, appHttp.NewTendersListHandler(tenders_list.New(a.storage), a.config.path.tendersList))
 	a.mux.Handle(a.config.path.tendersMy, appHttp.NewTendersMyHandler(tenders_my.New(a.storage), a.config.path.tendersList))
+	a.mux.Handle(a.config.path.tendersStatus, appHttp.NewTendersStatusHandler(tenders_status.New(a.storage), a.config.path.tendersStatus))
 
 	return a.server.ListenAndServe()
 }
