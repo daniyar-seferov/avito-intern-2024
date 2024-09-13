@@ -3,6 +3,7 @@ package tenders_list
 import (
 	"avito/tender/internal/domain"
 	"context"
+	"strings"
 	"time"
 )
 
@@ -26,7 +27,12 @@ func New(repo repository) *Handler {
 }
 
 func (h *Handler) ListTender(ctx context.Context, serviceType []string, limit int, offset int) ([]domain.TenderAddResponse, error) {
-	tenders, err := h.repo.GetTenderList(ctx, serviceType, limit, offset)
+	servDBTypes := make([]string, 0, len(serviceType))
+	for _, servType := range serviceType {
+		servDBTypes = append(servDBTypes, strings.ToUpper(servType))
+	}
+
+	tenders, err := h.repo.GetTenderList(ctx, servDBTypes, limit, offset)
 	if err != nil {
 		return nil, err
 	}
