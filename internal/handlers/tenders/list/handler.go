@@ -2,14 +2,14 @@ package tenders_list
 
 import (
 	"avito/tender/internal/domain"
+	"avito/tender/internal/handlers"
 	"context"
 	"strings"
-	"time"
 )
 
 type (
 	repository interface {
-		GetTenderList(ctx context.Context, serviceTypes []string, limit int, offset int) ([]domain.TenderAddDTO, error)
+		GetTenderList(ctx context.Context, serviceTypes []string, limit int, offset int) ([]domain.TenderDTO, error)
 	}
 
 	Handler struct {
@@ -23,7 +23,7 @@ func New(repo repository) *Handler {
 	}
 }
 
-func (h *Handler) ListTender(ctx context.Context, serviceType []string, limit int, offset int) ([]domain.TenderAddResponse, error) {
+func (h *Handler) ListTender(ctx context.Context, serviceType []string, limit int, offset int) ([]domain.TenderResponse, error) {
 	servDBTypes := make([]string, 0, len(serviceType))
 	for _, servType := range serviceType {
 		servDBTypes = append(servDBTypes, strings.ToUpper(servType))
@@ -34,17 +34,9 @@ func (h *Handler) ListTender(ctx context.Context, serviceType []string, limit in
 		return nil, err
 	}
 
-	tendersResp := make([]domain.TenderAddResponse, 0, len(tenders))
+	tendersResp := make([]domain.TenderResponse, 0, len(tenders))
 	for _, tenderDB := range tenders {
-		tenderResp := domain.TenderAddResponse{
-			ID:          tenderDB.ID,
-			Name:        tenderDB.Name,
-			Description: tenderDB.Description,
-			Status:      domain.TenderStatusMap[tenderDB.Status],
-			ServiceType: domain.ServiceTypeMap[tenderDB.ServiceType],
-			Version:     tenderDB.Version,
-			CreatedAt:   tenderDB.CreatedAt.Format(time.RFC3339),
-		}
+		tenderResp := handlers.ConvertTenderDTOToTenderResponse(tenderDB)
 		tendersResp = append(tendersResp, tenderResp)
 	}
 

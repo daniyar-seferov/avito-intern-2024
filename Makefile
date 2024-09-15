@@ -5,8 +5,8 @@ ENV_NAME="avito-tender"
 APP_NAME="avitoapp"
 MIGRATE_DIR=${CURDIR}/migrations
 
-# -include ./build/dev/.env
--include ./build/prod/.env
+-include ./build/dev/.env
+# -include ./build/prod/.env
 
 .PHONY: compose-up
 compose-up:

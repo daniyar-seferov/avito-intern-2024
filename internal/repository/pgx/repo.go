@@ -20,7 +20,7 @@ func NewRepo(conn *pgx.Conn) *Repo {
 	}
 }
 
-func (r *Repo) AddTender(ctx context.Context, tender domain.TenderAddDTO) (string, error) {
+func (r *Repo) AddTender(ctx context.Context, tender domain.TenderDTO) (string, error) {
 	const query = `
 	INSERT INTO tender (organization_id, user_id, name, description, type)
 	VALUES ($1, $2, $3, $4, $5) RETURNING id;`
@@ -54,12 +54,12 @@ func (r *Repo) GetUserOrganizationId(ctx context.Context, username string) (stri
 	return uid, organizationId, nil
 }
 
-func (r *Repo) GetTender(ctx context.Context, tenderId string) (domain.TenderAddDTO, error) {
+func (r *Repo) GetTender(ctx context.Context, tenderId string) (domain.TenderDTO, error) {
 	const query = `
 	SELECT organization_id, user_id, name, description, status, type, version, created_at 
 	FROM tender WHERE id=$1;`
 
-	tender := domain.TenderAddDTO{}
+	tender := domain.TenderDTO{}
 
 	err := r.conn.QueryRow(ctx, query, tenderId).Scan(&tender.OrganizationId, &tender.UserId, &tender.Name, &tender.Description, &tender.Status, &tender.ServiceType, &tender.Version, &tender.CreatedAt)
 	if err == pgx.ErrNoRows {
@@ -73,14 +73,14 @@ func (r *Repo) GetTender(ctx context.Context, tenderId string) (domain.TenderAdd
 	return tender, nil
 }
 
-func (r *Repo) GetTenderList(ctx context.Context, serviceTypes []string, limit int, offset int) ([]domain.TenderAddDTO, error) {
+func (r *Repo) GetTenderList(ctx context.Context, serviceTypes []string, limit int, offset int) ([]domain.TenderDTO, error) {
 	var query = `
 	SELECT id, name, description, status, type, version, created_at 
 	FROM tender`
 
 	var (
 		args    []interface{}
-		tenders []domain.TenderAddDTO
+		tenders []domain.TenderDTO
 	)
 
 	if len(serviceTypes) > 0 {
@@ -107,7 +107,7 @@ func (r *Repo) GetTenderList(ctx context.Context, serviceTypes []string, limit i
 	}
 
 	for rows.Next() {
-		tender := domain.TenderAddDTO{}
+		tender := domain.TenderDTO{}
 		err := rows.Scan(&tender.ID, &tender.Name, &tender.Description, &tender.Status, &tender.ServiceType, &tender.Version, &tender.CreatedAt)
 		if err != nil {
 			fmt.Printf("GetTenderList rows.Scan error: %v", err)
@@ -120,7 +120,7 @@ func (r *Repo) GetTenderList(ctx context.Context, serviceTypes []string, limit i
 	return tenders, nil
 }
 
-func (r *Repo) GetUsersTenders(ctx context.Context, uid string, limit int, offset int) ([]domain.TenderAddDTO, error) {
+func (r *Repo) GetUsersTenders(ctx context.Context, uid string, limit int, offset int) ([]domain.TenderDTO, error) {
 	var query = `
 	SELECT id, name, description, status, type, version, created_at 
 	FROM tender 
@@ -128,7 +128,7 @@ func (r *Repo) GetUsersTenders(ctx context.Context, uid string, limit int, offse
 
 	var (
 		args    []interface{}
-		tenders []domain.TenderAddDTO
+		tenders []domain.TenderDTO
 	)
 	args = append(args, uid)
 
@@ -147,7 +147,7 @@ func (r *Repo) GetUsersTenders(ctx context.Context, uid string, limit int, offse
 	}
 
 	for rows.Next() {
-		tender := domain.TenderAddDTO{}
+		tender := domain.TenderDTO{}
 		err := rows.Scan(&tender.ID, &tender.Name, &tender.Description, &tender.Status, &tender.ServiceType, &tender.Version, &tender.CreatedAt)
 		if err != nil {
 			fmt.Printf("GetUsersTenders rows.Scan error: %v", err)

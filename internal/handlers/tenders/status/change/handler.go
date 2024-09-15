@@ -9,7 +9,7 @@ import (
 type (
 	repository interface {
 		GetUserOrganizationId(ctx context.Context, username string) (string, string, error)
-		GetTender(ctx context.Context, tenderId string) (domain.TenderAddDTO, error)
+		GetTender(ctx context.Context, tenderId string) (domain.TenderDTO, error)
 	}
 
 	Handler struct {
@@ -23,8 +23,8 @@ func New(repo repository) *Handler {
 	}
 }
 
-func (h *Handler) StatusTender(ctx context.Context, username string, tenderId string) (string, error) {
-	uid, organization_id, err := h.repo.GetUserOrganizationId(ctx, username)
+func (h *Handler) ChangeStatusTender(ctx context.Context, username string, tenderId string, status string) (string, error) {
+	uid, organizationID, err := h.repo.GetUserOrganizationId(ctx, username)
 	if err != nil {
 		return "", err
 	}
@@ -34,7 +34,7 @@ func (h *Handler) StatusTender(ctx context.Context, username string, tenderId st
 		return "", err
 	}
 
-	if uid != tenderDB.UserId || organization_id != tenderDB.OrganizationId {
+	if uid != tenderDB.UserId || organizationID != tenderDB.OrganizationId {
 		return "", app_errors.ErrUserPermissions
 	}
 

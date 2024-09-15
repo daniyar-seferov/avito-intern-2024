@@ -12,7 +12,7 @@ import (
 
 type (
 	myTenderCommand interface {
-		MyTenders(ctx context.Context, username string, limit int, offset int) ([]domain.TenderAddResponse, error)
+		MyTenders(ctx context.Context, username string, limit int, offset int) ([]domain.TenderResponse, error)
 	}
 
 	MyHandler struct {

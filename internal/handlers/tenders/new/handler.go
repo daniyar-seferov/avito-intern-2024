@@ -3,17 +3,17 @@ package tenders_new
 import (
 	"avito/tender/internal/domain"
 	app_errors "avito/tender/internal/errors"
+	"avito/tender/internal/handlers"
 	"context"
 	"fmt"
 	"strings"
-	"time"
 )
 
 type (
 	repository interface {
-		AddTender(ctx context.Context, tender domain.TenderAddDTO) (string, error)
+		AddTender(ctx context.Context, tender domain.TenderDTO) (string, error)
 		GetUserOrganizationId(ctx context.Context, username string) (string, string, error)
-		GetTender(ctx context.Context, tenderId string) (domain.TenderAddDTO, error)
+		GetTender(ctx context.Context, tenderId string) (domain.TenderDTO, error)
 	}
 
 	Handler struct {
@@ -27,17 +27,17 @@ func New(repo repository) *Handler {
 	}
 }
 
-func (h *Handler) AddTender(ctx context.Context, tender domain.TenderAddRequest) (domain.TenderAddResponse, error) {
+func (h *Handler) AddTender(ctx context.Context, tender domain.TenderAddRequest) (domain.TenderResponse, error) {
 	uid, organizationId, err := h.repo.GetUserOrganizationId(ctx, tender.CreatorUsername)
 	if err != nil {
-		return domain.TenderAddResponse{}, err
+		return domain.TenderResponse{}, err
 	}
 
 	if organizationId != tender.OrganizationId {
-		return domain.TenderAddResponse{}, app_errors.ErrInvalidOrganization
+		return domain.TenderResponse{}, app_errors.ErrInvalidOrganization
 	}
 
-	tenderDTO := domain.TenderAddDTO{
+	tenderDTO := domain.TenderDTO{
 		Name:           tender.Name,
 		Description:    tender.Description,
 		ServiceType:    strings.ToUpper(tender.ServiceType),
@@ -47,23 +47,15 @@ func (h *Handler) AddTender(ctx context.Context, tender domain.TenderAddRequest)
 
 	tenderId, err := h.repo.AddTender(ctx, tenderDTO)
 	if err != nil {
-		return domain.TenderAddResponse{}, fmt.Errorf("repo.AddTender failed: %w", err)
+		return domain.TenderResponse{}, fmt.Errorf("repo.AddTender failed: %w", err)
 	}
 
 	tenderDB, err := h.repo.GetTender(ctx, tenderId)
 	if err != nil {
-		return domain.TenderAddResponse{}, fmt.Errorf("repo.GetTender failed: %w", err)
+		return domain.TenderResponse{}, fmt.Errorf("repo.GetTender failed: %w", err)
 	}
 
-	tenderResp := domain.TenderAddResponse{
-		ID:          tenderDB.ID,
-		Name:        tenderDB.Name,
-		Description: tenderDB.Description,
-		Status:      domain.TenderStatusMap[tenderDB.Status],
-		ServiceType: domain.ServiceTypeMap[tenderDB.ServiceType],
-		Version:     tenderDB.Version,
-		CreatedAt:   tenderDB.CreatedAt.Format(time.RFC3339),
-	}
+	tenderResp := handlers.ConvertTenderDTOToTenderResponse(tenderDB)
 
 	return tenderResp, nil
 }

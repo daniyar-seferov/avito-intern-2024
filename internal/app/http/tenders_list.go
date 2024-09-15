@@ -13,7 +13,7 @@ import (
 
 type (
 	listTenderCommand interface {
-		ListTender(ctx context.Context, serviceType []string, limit int, offset int) ([]domain.TenderAddResponse, error)
+		ListTender(ctx context.Context, serviceType []string, limit int, offset int) ([]domain.TenderResponse, error)
 	}
 
 	ListHandler struct {

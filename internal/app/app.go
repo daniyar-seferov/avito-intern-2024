@@ -12,7 +12,8 @@ import (
 	tenders_list "avito/tender/internal/handlers/tenders/list"
 	tenders_my "avito/tender/internal/handlers/tenders/my"
 	tenders_new "avito/tender/internal/handlers/tenders/new"
-	tenders_status "avito/tender/internal/handlers/tenders/status"
+	tenders_change_status "avito/tender/internal/handlers/tenders/status/change"
+	tenders_status "avito/tender/internal/handlers/tenders/status/get"
 	db_pgx_repo "avito/tender/internal/repository/pgx"
 
 	pgxv5 "github.com/jackc/pgx/v5"
@@ -27,11 +28,11 @@ type (
 		Shutdown(ctx context.Context) error
 	}
 	tenderStorage interface {
-		AddTender(ctx context.Context, item domain.TenderAddDTO) (string, error)
+		AddTender(ctx context.Context, item domain.TenderDTO) (string, error)
 		GetUserOrganizationId(ctx context.Context, username string) (string, string, error)
-		GetTender(ctx context.Context, tenderId string) (domain.TenderAddDTO, error)
-		GetTenderList(ctx context.Context, serviceTypes []string, limit int, offset int) ([]domain.TenderAddDTO, error)
-		GetUsersTenders(ctx context.Context, username string, limit int, offset int) ([]domain.TenderAddDTO, error)
+		GetTender(ctx context.Context, tenderId string) (domain.TenderDTO, error)
+		GetTenderList(ctx context.Context, serviceTypes []string, limit int, offset int) ([]domain.TenderDTO, error)
+		GetUsersTenders(ctx context.Context, username string, limit int, offset int) ([]domain.TenderDTO, error)
 	}
 
 	App struct {
@@ -72,6 +73,7 @@ func (a *App) ListenAndServe() error {
 	a.mux.Handle(a.config.path.tendersList, appHttp.NewTendersListHandler(tenders_list.New(a.storage), a.config.path.tendersList))
 	a.mux.Handle(a.config.path.tendersMy, appHttp.NewTendersMyHandler(tenders_my.New(a.storage), a.config.path.tendersList))
 	a.mux.Handle(a.config.path.tendersStatus, appHttp.NewTendersStatusHandler(tenders_status.New(a.storage), a.config.path.tendersStatus))
+	a.mux.Handle(a.config.path.tendersChangeStatus, appHttp.NewTendersChangeStatusHandler(tenders_change_status.New(a.storage), a.config.path.tendersChangeStatus))
 
 	return a.server.ListenAndServe()
 }

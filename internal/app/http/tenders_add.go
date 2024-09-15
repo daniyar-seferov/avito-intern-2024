@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 
@@ -14,7 +15,7 @@ import (
 
 type (
 	addTenderCommand interface {
-		AddTender(ctx context.Context, tender domain.TenderAddRequest) (domain.TenderAddResponse, error)
+		AddTender(ctx context.Context, tender domain.TenderAddRequest) (domain.TenderResponse, error)
 	}
 
 	AddHandler struct {
@@ -38,7 +39,12 @@ func (h *AddHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	)
 
 	request = domain.TenderAddRequest{}
-	if err = json.NewDecoder(r.Body).Decode(&request); err != nil {
+	err = json.NewDecoder(r.Body).Decode(&request)
+	if err == io.EOF {
+		GetErrorResponse(w, h.name, fmt.Errorf("invalid json"), http.StatusBadRequest)
+		return
+	}
+	if err != nil {
 		GetErrorResponse(w, h.name, err, http.StatusBadRequest)
 		return
 	}

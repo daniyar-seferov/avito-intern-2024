@@ -11,7 +11,7 @@ type (
 		CreatorUsername string `json:"creatorUsername" validate:"nonzero"`
 	}
 
-	TenderAddResponse struct {
+	TenderResponse struct {
 		ID          string `json:"id"`
 		Name        string `json:"name"`
 		Description string `json:"description"`
@@ -21,7 +21,7 @@ type (
 		CreatedAt   string `json:"created_at"`
 	}
 
-	TenderAddDTO struct {
+	TenderDTO struct {
 		ID             string
 		Name           string
 		Description    string
