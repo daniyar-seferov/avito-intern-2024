@@ -31,6 +31,7 @@ type (
 		UserId         string
 		Version        int
 		CreatedAt      time.Time
+		UpdatedAt      time.Time
 	}
 )
 

@@ -56,14 +56,14 @@ func (r *Repo) GetUserOrganizationId(ctx context.Context, username string) (stri
 
 func (r *Repo) GetTender(ctx context.Context, tenderId string) (domain.TenderDTO, error) {
 	const query = `
-	SELECT organization_id, user_id, name, description, status, type, version, created_at 
+	SELECT organization_id, user_id, name, description, status, type, version, created_at, updated_at 
 	FROM tender WHERE id=$1;`
 
 	tender := domain.TenderDTO{}
 
-	err := r.conn.QueryRow(ctx, query, tenderId).Scan(&tender.OrganizationId, &tender.UserId, &tender.Name, &tender.Description, &tender.Status, &tender.ServiceType, &tender.Version, &tender.CreatedAt)
+	err := r.conn.QueryRow(ctx, query, tenderId).Scan(&tender.OrganizationId, &tender.UserId, &tender.Name, &tender.Description, &tender.Status, &tender.ServiceType, &tender.Version, &tender.CreatedAt, &tender.UpdatedAt)
 	if err == pgx.ErrNoRows {
-		return tender, app_errors.ErrTenderId
+		return tender, app_errors.ErrInvalidTenderId
 	}
 	if err != nil {
 		return tender, err
@@ -158,4 +158,79 @@ func (r *Repo) GetUsersTenders(ctx context.Context, uid string, limit int, offse
 	rows.Close()
 
 	return tenders, nil
+}
+
+func (r *Repo) InTx(ctx context.Context, f func(tx pgx.Tx) error) error {
+	tx, err := r.conn.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer func(tx pgx.Tx, ctx context.Context) {
+		err := tx.Rollback(ctx)
+		if err != nil {
+			fmt.Printf("transaction rollback error: %v \n", err)
+		}
+	}(tx, ctx)
+
+	err = f(tx)
+	if err != nil {
+		return err
+	}
+
+	return tx.Commit(ctx)
+}
+
+func (r *Repo) ChangeTenderStatus(ctx context.Context, tenderId, status string) (domain.TenderDTO, error) {
+	var tenderDB domain.TenderDTO
+
+	err := r.InTx(ctx, func(tx pgx.Tx) error {
+		var err error
+		tenderOld, err := r.GetTender(ctx, tenderId)
+		if err != nil {
+			return err
+		}
+
+		err = r.SetTenderRevision(ctx, tenderOld)
+		if err != nil {
+			return err
+		}
+
+		tenderDB, err = r.UpdateTenderStatus(ctx, tenderId, status)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	return tenderDB, err
+}
+
+func (r *Repo) SetTenderRevision(ctx context.Context, tender domain.TenderDTO) error {
+	const query = `
+	INSERT INTO tender_revision (tender_id, organization_id, user_id, name, description, status, type, version, created_at, updated_at) 
+	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10);`
+
+	_, err := r.conn.Exec(ctx, query, tender.ID, tender.OrganizationId, tender.UserId, tender.Name, tender.Description, tender.Status, tender.ServiceType, tender.Version, tender.CreatedAt, tender.UpdatedAt)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *Repo) UpdateTenderStatus(ctx context.Context, tenderId, status string) (domain.TenderDTO, error) {
+	const query = `
+	UPDATE tender SET status=$1, version=version + 1, updated_at=CURRENT_TIMESTAMP WHERE id=$2
+	RETURNING id, organization_id, user_id, name, description, status, type, version, created_at, updated_at;`
+
+	tenderDB := domain.TenderDTO{}
+
+	err := r.conn.QueryRow(ctx, query, status, tenderId).
+		Scan(&tenderDB.ID, &tenderDB.OrganizationId, &tenderDB.UserId, &tenderDB.Name, &tenderDB.Description, &tenderDB.Status, &tenderDB.ServiceType, &tenderDB.Version, &tenderDB.CreatedAt, &tenderDB.UpdatedAt)
+	if err != nil {
+		return tenderDB, err
+	}
+
+	return tenderDB, nil
 }

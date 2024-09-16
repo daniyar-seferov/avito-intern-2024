@@ -33,6 +33,7 @@ type (
 		GetTender(ctx context.Context, tenderId string) (domain.TenderDTO, error)
 		GetTenderList(ctx context.Context, serviceTypes []string, limit int, offset int) ([]domain.TenderDTO, error)
 		GetUsersTenders(ctx context.Context, username string, limit int, offset int) ([]domain.TenderDTO, error)
+		ChangeTenderStatus(ctx context.Context, tenderId, status string) (domain.TenderDTO, error)
 	}
 
 	App struct {

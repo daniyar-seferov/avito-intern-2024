@@ -36,7 +36,7 @@ func (h *StatusHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	tenderId := r.PathValue("tenderId")
 
 	if username == "" {
-		GetErrorResponse(w, h.name, app_errors.ErrInvalidUser, http.StatusUnauthorized)
+		GetErrorResponse(w, h.name, app_errors.ErrInvalidUser, http.StatusBadRequest)
 		return
 	}
 
@@ -53,7 +53,7 @@ func (h *StatusHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		case app_errors.ErrUserPermissions:
 			GetErrorResponse(w, h.name, err, http.StatusForbidden)
 			return
-		case app_errors.ErrTenderId:
+		case app_errors.ErrInvalidTenderId:
 			GetErrorResponse(w, h.name, err, http.StatusNotFound)
 			return
 		default:

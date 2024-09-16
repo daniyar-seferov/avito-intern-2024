@@ -1,15 +1,18 @@
 package http
 
 import (
+	"avito/tender/internal/domain"
 	app_errors "avito/tender/internal/errors"
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 )
 
 type (
 	changeStatusTenderCommand interface {
-		ChangeStatusTender(ctx context.Context, username, tenderId, status string) (string, error)
+		ChangeStatusTender(ctx context.Context, username, tenderId, status string) (domain.TenderResponse, error)
 	}
 
 	ChangeStatusHandler struct {
@@ -37,7 +40,11 @@ func (h *ChangeStatusHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 	tenderId := r.PathValue("tenderId")
 
 	if username == "" {
-		GetErrorResponse(w, h.name, app_errors.ErrInvalidUser, http.StatusUnauthorized)
+		GetErrorResponse(w, h.name, app_errors.ErrInvalidUser, http.StatusBadRequest)
+		return
+	}
+	if _, inMap := domain.TenderStatusMap[strings.ToUpper(status)]; !inMap {
+		GetErrorResponse(w, h.name, app_errors.ErrInvalidStatus, http.StatusBadRequest)
 		return
 	}
 
@@ -55,7 +62,7 @@ func (h *ChangeStatusHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 		case app_errors.ErrUserPermissions:
 			GetErrorResponse(w, h.name, err, http.StatusForbidden)
 			return
-		case app_errors.ErrTenderId:
+		case app_errors.ErrInvalidTenderId:
 			GetErrorResponse(w, h.name, err, http.StatusNotFound)
 			return
 		default:
@@ -65,6 +72,11 @@ func (h *ChangeStatusHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 		}
 	}
 
-	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write([]byte(resp))
+	respData, err := json.Marshal(resp)
+	if err != nil {
+		fmt.Printf("response marshal error: %v", err)
+		GetErrorResponse(w, h.name, app_errors.ErrInternalServer, http.StatusInternalServerError)
+	}
+
+	GetSuccessResponseWithBody(w, respData)
 }

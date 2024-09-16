@@ -3,13 +3,16 @@ package tenders_new
 import (
 	"avito/tender/internal/domain"
 	app_errors "avito/tender/internal/errors"
+	"avito/tender/internal/handlers"
 	"context"
+	"strings"
 )
 
 type (
 	repository interface {
 		GetUserOrganizationId(ctx context.Context, username string) (string, string, error)
 		GetTender(ctx context.Context, tenderId string) (domain.TenderDTO, error)
+		ChangeTenderStatus(ctx context.Context, tenderId, status string) (domain.TenderDTO, error)
 	}
 
 	Handler struct {
@@ -23,20 +26,28 @@ func New(repo repository) *Handler {
 	}
 }
 
-func (h *Handler) ChangeStatusTender(ctx context.Context, username string, tenderId string, status string) (string, error) {
+func (h *Handler) ChangeStatusTender(ctx context.Context, username string, tenderId string, status string) (domain.TenderResponse, error) {
+	var tenderResp domain.TenderResponse
 	uid, organizationID, err := h.repo.GetUserOrganizationId(ctx, username)
 	if err != nil {
-		return "", err
+		return tenderResp, err
 	}
 
 	tenderDB, err := h.repo.GetTender(ctx, tenderId)
 	if err != nil {
-		return "", err
+		return tenderResp, err
 	}
 
 	if uid != tenderDB.UserId || organizationID != tenderDB.OrganizationId {
-		return "", app_errors.ErrUserPermissions
+		return tenderResp, app_errors.ErrUserPermissions
 	}
 
-	return domain.TenderStatusMap[tenderDB.Status], nil
+	tenderDB, err = h.repo.ChangeTenderStatus(ctx, tenderId, strings.ToUpper(status))
+	if err != nil {
+		return tenderResp, err
+	}
+
+	tenderResp = handlers.ConvertTenderDTOToTenderResponse(tenderDB)
+
+	return tenderResp, nil
 }
