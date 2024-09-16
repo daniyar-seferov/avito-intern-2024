@@ -1,0 +1,39 @@
+services:
+  postgres:
+    container_name: avito-pg
+    image: postgres:16.2
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DATABASE}
+      POSTGRES_USER: ${POSTGRES_USERNAME}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - ${POSTGRES_PORT}:5432
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "pg_isready",
+          "-q",
+          "-d",
+          "${POSTGRES_DATABASE}",
+          "-U",
+          "${POSTGRES_USERNAME}",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  avitoapp:
+    image: avitoapp
+    build:
+      context: ../../
+    environment:
+      MODE: "dev"
+      SERVER_ADDRESS: ${SERVER_ADDRESS}
+      POSTGRES_CONN: ${POSTGRES_CONN}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
