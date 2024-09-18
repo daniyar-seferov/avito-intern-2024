@@ -40,6 +40,11 @@ func (h *MyHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	limitQuery := queryFromURL.Get("limit")
 	offsetQuery := queryFromURL.Get("offset")
 
+	if username == "" {
+		GetErrorResponse(w, h.name, app_errors.ErrInvalidUser, http.StatusBadRequest)
+		return
+	}
+
 	if limitQuery != "" {
 		limit, err = strconv.ParseInt(limitQuery, 10, 32)
 		if err != nil || limit <= 0 {

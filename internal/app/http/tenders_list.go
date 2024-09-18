@@ -8,7 +8,8 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"strings"
+
+	"gopkg.in/validator.v2"
 )
 
 type (
@@ -42,9 +43,8 @@ func (h *ListHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	offsetQuery := queryFromURL.Get("offset")
 
 	for _, serviceType := range serviceTypeArr {
-		serviceType = strings.ToUpper(serviceType)
-		if _, inMap := domain.ServiceTypeMap[serviceType]; !inMap {
-			GetErrorResponse(w, h.name, fmt.Errorf("invalid service type"), http.StatusBadRequest)
+		if err = validator.Valid(serviceType, "servicetype"); err != nil {
+			GetErrorResponse(w, h.name, err, http.StatusBadRequest)
 			return
 		}
 	}

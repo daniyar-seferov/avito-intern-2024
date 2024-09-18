@@ -5,14 +5,13 @@ import (
 	app_errors "avito/tender/internal/errors"
 	"avito/tender/internal/handlers"
 	"context"
-	"strings"
 )
 
 type (
 	repository interface {
 		GetUserOrganizationId(ctx context.Context, username string) (string, string, error)
 		GetTender(ctx context.Context, tenderId string) (domain.TenderDTO, error)
-		ChangeTenderStatus(ctx context.Context, tenderId, status string) (domain.TenderDTO, error)
+		UpdateTender(ctx context.Context, tenderId string, tenderDTO domain.TenderDTO) (domain.TenderDTO, error)
 	}
 
 	Handler struct {
@@ -42,7 +41,10 @@ func (h *Handler) ChangeStatusTender(ctx context.Context, username string, tende
 		return tenderResp, app_errors.ErrUserPermissions
 	}
 
-	tenderDB, err = h.repo.ChangeTenderStatus(ctx, tenderId, strings.ToUpper(status))
+	tenderDTO := domain.TenderDTO{
+		Status: handlers.ConvertTenderStatusReqToTenderStatusDB(status),
+	}
+	tenderDB, err = h.repo.UpdateTender(ctx, tenderId, tenderDTO)
 	if err != nil {
 		return tenderResp, err
 	}
