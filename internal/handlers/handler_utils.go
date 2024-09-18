@@ -6,6 +6,7 @@ import (
 	"time"
 )
 
+// ConvertTenderDTOToTenderResponse converts TenderDTO to TenderResponse.
 func ConvertTenderDTOToTenderResponse(tender domain.TenderDTO) domain.TenderResponse {
 	return domain.TenderResponse{
 		ID:          tender.ID,
@@ -18,10 +19,12 @@ func ConvertTenderDTOToTenderResponse(tender domain.TenderDTO) domain.TenderResp
 	}
 }
 
+// ConvertServiceTypeReqToServiceTypeDB converts ServiceTypeReq to ServiceTypeDB.
 func ConvertServiceTypeReqToServiceTypeDB(serviceType string) string {
 	return strings.ToUpper(serviceType)
 }
 
+// ConvertTenderStatusReqToTenderStatusDB converts TenderStatusReq to TenderStatusDB.
 func ConvertTenderStatusReqToTenderStatusDB(status string) string {
 	return strings.ToUpper(status)
 }

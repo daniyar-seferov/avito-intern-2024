@@ -17,12 +17,14 @@ type (
 		AddTender(ctx context.Context, tender domain.TenderAddRequest) (domain.TenderResponse, error)
 	}
 
+	// AddHandler add handler struct.
 	AddHandler struct {
 		name             string
 		addTenderCommand addTenderCommand
 	}
 )
 
+// NewTendersAddHandler returns new AddHandler.
 func NewTendersAddHandler(command addTenderCommand, name string) *AddHandler {
 	return &AddHandler{
 		name:             name,
@@ -47,7 +49,7 @@ func (h *AddHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		GetErrorResponse(w, h.name, err, http.StatusBadRequest)
 		return
 	}
-	r.Body.Close()
+	_ = r.Body.Close()
 
 	if err = validator.Validate(request); err != nil {
 		GetErrorResponse(w, h.name, err, http.StatusBadRequest)

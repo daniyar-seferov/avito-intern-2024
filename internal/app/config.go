@@ -7,6 +7,7 @@ import (
 const urlPrefix = "/api"
 
 type (
+	// Options struct.
 	Options struct {
 		Addr      string
 		DBConnStr string
@@ -22,6 +23,7 @@ type (
 	}
 )
 
+// NewConfig returns new config.
 func NewConfig(opts Options) config {
 	return config{
 		addr:      opts.Addr,

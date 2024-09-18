@@ -16,7 +16,11 @@ func initMigration(dbConnStr string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			log.Printf("Error closing database: %v", err)
+		}
+	}()
 
 	ctx := context.Background()
 	if err := db.PingContext(ctx); err != nil {

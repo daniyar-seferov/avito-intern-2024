@@ -15,12 +15,14 @@ type (
 		MyTenders(ctx context.Context, username string, limit int, offset int) ([]domain.TenderResponse, error)
 	}
 
+	// MyHandler user's tenders struct.
 	MyHandler struct {
 		name            string
 		myTenderCommand myTenderCommand
 	}
 )
 
+// NewTendersMyHandler returns MyHandler.
 func NewTendersMyHandler(command myTenderCommand, name string) *MyHandler {
 	return &MyHandler{
 		name:            name,

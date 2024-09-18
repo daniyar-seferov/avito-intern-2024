@@ -4,8 +4,10 @@ import (
 	"net/http"
 )
 
+// PingHandler struct.
 type PingHandler struct{}
 
+// NewPingHandler returns ping handler.
 func NewPingHandler() *PingHandler {
 	return &PingHandler{}
 }

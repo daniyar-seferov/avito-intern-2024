@@ -13,15 +13,17 @@ import (
 
 type (
 	changeStatusTenderCommand interface {
-		ChangeStatusTender(ctx context.Context, username, tenderId, status string) (domain.TenderResponse, error)
+		ChangeStatusTender(ctx context.Context, username, tenderID, status string) (domain.TenderResponse, error)
 	}
 
+	// ChangeStatusHandler change status struct.
 	ChangeStatusHandler struct {
 		name                      string
 		changeStatusTenderCommand changeStatusTenderCommand
 	}
 )
 
+// NewTendersChangeStatusHandler returns new ChangeStatusHandler.
 func NewTendersChangeStatusHandler(command changeStatusTenderCommand, name string) *ChangeStatusHandler {
 	return &ChangeStatusHandler{
 		name:                      name,
@@ -38,7 +40,7 @@ func (h *ChangeStatusHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 	queryFromURL := r.URL.Query()
 	username := queryFromURL.Get("username")
 	status := queryFromURL.Get("status")
-	tenderId := r.PathValue("tenderId")
+	tenderID := r.PathValue("tenderId")
 
 	if username == "" {
 		GetErrorResponse(w, h.name, app_errors.ErrInvalidUser, http.StatusBadRequest)
@@ -53,7 +55,7 @@ func (h *ChangeStatusHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 	resp, err := h.changeStatusTenderCommand.ChangeStatusTender(
 		ctx,
 		username,
-		tenderId,
+		tenderID,
 		status,
 	)
 	if err != nil {
@@ -64,7 +66,7 @@ func (h *ChangeStatusHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 		case app_errors.ErrUserPermissions:
 			GetErrorResponse(w, h.name, err, http.StatusForbidden)
 			return
-		case app_errors.ErrInvalidTenderId:
+		case app_errors.ErrInvalidTenderID:
 			GetErrorResponse(w, h.name, err, http.StatusNotFound)
 			return
 		default:

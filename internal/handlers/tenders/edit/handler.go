@@ -10,37 +10,40 @@ import (
 
 type (
 	repository interface {
-		GetUserOrganizationId(ctx context.Context, username string) (string, string, error)
-		GetTender(ctx context.Context, tenderId string) (domain.TenderDTO, error)
-		UpdateTender(ctx context.Context, tenderId string, tenderDTO domain.TenderDTO) (domain.TenderDTO, error)
+		GetUserOrganizationID(ctx context.Context, username string) (string, string, error)
+		GetTender(ctx context.Context, tenderID string) (domain.TenderDTO, error)
+		UpdateTender(ctx context.Context, tenderID string, tenderDTO domain.TenderDTO) (domain.TenderDTO, error)
 	}
 
+	// Handler struct for EditTender handler.
 	Handler struct {
 		repo repository
 	}
 )
 
+// New returns new EditTender handler.
 func New(repo repository) *Handler {
 	return &Handler{
 		repo: repo,
 	}
 }
 
-func (h *Handler) EditTender(ctx context.Context, username string, tenderId string, tender domain.TenderEditRequest) (domain.TenderResponse, error) {
-	uid, organizationId, err := h.repo.GetUserOrganizationId(ctx, username)
+// EditTender edits tender.
+func (h *Handler) EditTender(ctx context.Context, username string, tenderID string, tender domain.TenderEditRequest) (domain.TenderResponse, error) {
+	uid, organizationID, err := h.repo.GetUserOrganizationID(ctx, username)
 	if err != nil {
 		return domain.TenderResponse{}, err
 	}
 
-	tenderDB, err := h.repo.GetTender(ctx, tenderId)
+	tenderDB, err := h.repo.GetTender(ctx, tenderID)
 	if err != nil {
 		return domain.TenderResponse{}, fmt.Errorf("repo.EditTender failed: %w", err)
 	}
 
-	if uid != tenderDB.UserId {
+	if uid != tenderDB.UserID {
 		return domain.TenderResponse{}, app_errors.ErrUserPermissions
 	}
-	if organizationId != tenderDB.OrganizationId {
+	if organizationID != tenderDB.OrganizationID {
 		return domain.TenderResponse{}, app_errors.ErrInvalidOrganization
 	}
 
@@ -55,7 +58,7 @@ func (h *Handler) EditTender(ctx context.Context, username string, tenderId stri
 		tenderDTO.ServiceType = handlers.ConvertServiceTypeReqToServiceTypeDB(tender.ServiceType)
 	}
 
-	tenderUpd, err := h.repo.UpdateTender(ctx, tenderId, tenderDTO)
+	tenderUpd, err := h.repo.UpdateTender(ctx, tenderID, tenderDTO)
 	if err != nil {
 		return domain.TenderResponse{}, fmt.Errorf("repo.EditTender failed: %w", err)
 	}

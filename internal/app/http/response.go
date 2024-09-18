@@ -6,10 +6,12 @@ import (
 	"net/http"
 )
 
+// ErrorResponse error response struct.
 type ErrorResponse struct {
 	Reason string `json:"reason"`
 }
 
+// GetErrorResponse set error response.
 func GetErrorResponse(w http.ResponseWriter, handlerName string, err error, statusCode int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
@@ -21,6 +23,7 @@ func GetErrorResponse(w http.ResponseWriter, handlerName string, err error, stat
 	_, _ = w.Write(data)
 }
 
+// GetSuccessResponseWithBody set success response.
 func GetSuccessResponseWithBody(w http.ResponseWriter, body []byte) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)

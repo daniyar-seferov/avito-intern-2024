@@ -31,13 +31,14 @@ type (
 	}
 	tenderStorage interface {
 		AddTender(ctx context.Context, item domain.TenderDTO) (string, error)
-		GetUserOrganizationId(ctx context.Context, username string) (string, string, error)
-		GetTender(ctx context.Context, tenderId string) (domain.TenderDTO, error)
+		GetUserOrganizationID(ctx context.Context, username string) (string, string, error)
+		GetTender(ctx context.Context, tenderID string) (domain.TenderDTO, error)
 		GetTenderList(ctx context.Context, serviceTypes []string, limit int, offset int) ([]domain.TenderDTO, error)
 		GetUsersTenders(ctx context.Context, username string, limit int, offset int) ([]domain.TenderDTO, error)
-		UpdateTender(ctx context.Context, tenderId string, tenderDTO domain.TenderDTO) (domain.TenderDTO, error)
+		UpdateTender(ctx context.Context, tenderID string, tenderDTO domain.TenderDTO) (domain.TenderDTO, error)
 	}
 
+	// App struct.
 	App struct {
 		config  config
 		mux     mux
@@ -47,6 +48,7 @@ type (
 	}
 )
 
+// NewApp returns new App.
 func NewApp(config config) (*App, error) {
 	var mux = http.NewServeMux()
 
@@ -61,18 +63,24 @@ func NewApp(config config) (*App, error) {
 		return nil, err
 	}
 
-	validate.SetValidationFunc("servicetype", appHttp.ValidateServiceType)
-	validate.SetValidationFunc("tenderstatus", appHttp.ValidateTenderStatus)
+	_ = validate.SetValidationFunc("servicetype", appHttp.ValidateServiceType)
+	_ = validate.SetValidationFunc("tenderstatus", appHttp.ValidateTenderStatus)
 
 	return &App{
-		config:  config,
-		mux:     mux,
-		server:  &http.Server{Addr: config.addr, Handler: wrapLogger(mux)},
+		config: config,
+		mux:    mux,
+		server: &http.Server{
+			Addr:         config.addr,
+			Handler:      wrapLogger(mux),
+			ReadTimeout:  10 * time.Second,
+			WriteTimeout: 10 * time.Second,
+		},
 		dbConn:  conn,
 		storage: db_pgx_repo.NewRepo(conn),
 	}, nil
 }
 
+// ListenAndServe handles urls.
 func (a *App) ListenAndServe() error {
 	a.mux.Handle(a.config.path.ping, appHttp.NewPingHandler())
 	a.mux.Handle(a.config.path.tendersAdd, appHttp.NewTendersAddHandler(tenders_new.New(a.storage), a.config.path.tendersAdd))
@@ -85,6 +93,7 @@ func (a *App) ListenAndServe() error {
 	return a.server.ListenAndServe()
 }
 
+// Close closes app connections.
 func (a *App) Close() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

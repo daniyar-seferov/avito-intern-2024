@@ -36,5 +36,7 @@ func main() {
 
 	<-stop
 	fmt.Println("Shutting down...")
-	service.Close()
+	if err := service.Close(); err != nil {
+		log.Printf("Error closing service: %v", err)
+	}
 }
