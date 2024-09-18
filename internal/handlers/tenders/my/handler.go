@@ -8,23 +8,26 @@ import (
 
 type (
 	repository interface {
-		GetUserOrganizationId(ctx context.Context, username string) (string, string, error)
+		GetUserOrganizationID(ctx context.Context, username string) (string, string, error)
 		GetUsersTenders(ctx context.Context, username string, limit int, offset int) ([]domain.TenderDTO, error)
 	}
 
+	// Handler struct for MyTenders.
 	Handler struct {
 		repo repository
 	}
 )
 
+// New returns new MyTenders handler.
 func New(repo repository) *Handler {
 	return &Handler{
 		repo: repo,
 	}
 }
 
+// MyTenders returns user's tenders.
 func (h *Handler) MyTenders(ctx context.Context, username string, limit int, offset int) ([]domain.TenderResponse, error) {
-	uid, _, err := h.repo.GetUserOrganizationId(ctx, username)
+	uid, _, err := h.repo.GetUserOrganizationID(ctx, username)
 	if err != nil {
 		return nil, err
 	}

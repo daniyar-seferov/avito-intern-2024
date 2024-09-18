@@ -11,28 +11,31 @@ import (
 type (
 	repository interface {
 		AddTender(ctx context.Context, tender domain.TenderDTO) (string, error)
-		GetUserOrganizationId(ctx context.Context, username string) (string, string, error)
-		GetTender(ctx context.Context, tenderId string) (domain.TenderDTO, error)
+		GetUserOrganizationID(ctx context.Context, username string) (string, string, error)
+		GetTender(ctx context.Context, tenderID string) (domain.TenderDTO, error)
 	}
 
+	// Handler struct for AddTender.
 	Handler struct {
 		repo repository
 	}
 )
 
+// New returns new AddTender handler.
 func New(repo repository) *Handler {
 	return &Handler{
 		repo: repo,
 	}
 }
 
+// AddTender adds new tender.
 func (h *Handler) AddTender(ctx context.Context, tender domain.TenderAddRequest) (domain.TenderResponse, error) {
-	uid, organizationId, err := h.repo.GetUserOrganizationId(ctx, tender.CreatorUsername)
+	uid, organizationID, err := h.repo.GetUserOrganizationID(ctx, tender.CreatorUsername)
 	if err != nil {
 		return domain.TenderResponse{}, err
 	}
 
-	if organizationId != tender.OrganizationId {
+	if organizationID != tender.OrganizationID {
 		return domain.TenderResponse{}, app_errors.ErrInvalidOrganization
 	}
 
@@ -40,16 +43,16 @@ func (h *Handler) AddTender(ctx context.Context, tender domain.TenderAddRequest)
 		Name:           tender.Name,
 		Description:    tender.Description,
 		ServiceType:    handlers.ConvertServiceTypeReqToServiceTypeDB(tender.ServiceType),
-		OrganizationId: tender.OrganizationId,
-		UserId:         uid,
+		OrganizationID: tender.OrganizationID,
+		UserID:         uid,
 	}
 
-	tenderId, err := h.repo.AddTender(ctx, tenderDTO)
+	tenderID, err := h.repo.AddTender(ctx, tenderDTO)
 	if err != nil {
 		return domain.TenderResponse{}, fmt.Errorf("repo.AddTender failed: %w", err)
 	}
 
-	tenderDB, err := h.repo.GetTender(ctx, tenderId)
+	tenderDB, err := h.repo.GetTender(ctx, tenderID)
 	if err != nil {
 		return domain.TenderResponse{}, fmt.Errorf("repo.GetTender failed: %w", err)
 	}

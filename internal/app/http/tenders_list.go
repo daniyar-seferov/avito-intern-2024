@@ -17,12 +17,14 @@ type (
 		ListTender(ctx context.Context, serviceType []string, limit int, offset int) ([]domain.TenderResponse, error)
 	}
 
+	// ListHandler tenders' list struct.
 	ListHandler struct {
 		name              string
 		listTenderCommand listTenderCommand
 	}
 )
 
+// NewTendersListHandler returns new ListHandler.
 func NewTendersListHandler(command listTenderCommand, name string) *ListHandler {
 	return &ListHandler{
 		name:              name,

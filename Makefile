@@ -72,3 +72,9 @@ goose-migrate-prod-up:
 		port=${POSTGRES_PORT}\
 		host=${POSTGRES_HOST}\
 		sslmode=disable" up
+
+install-golangci-lint:
+	GOBIN=$(BIN_DIR) go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.60.3
+
+lint:
+	${BIN_DIR}/golangci-lint run ./... --config .golangci.pipeline.yaml

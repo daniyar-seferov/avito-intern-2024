@@ -9,7 +9,8 @@ import (
 	"gopkg.in/validator.v2"
 )
 
-func ValidateServiceType(v interface{}, param string) error {
+// ValidateServiceType validates tender service type.
+func ValidateServiceType(v interface{}, _ string) error {
 	st := reflect.ValueOf(v)
 	if st.Kind() != reflect.String {
 		return validator.ErrUnsupported
@@ -23,7 +24,8 @@ func ValidateServiceType(v interface{}, param string) error {
 	return nil
 }
 
-func ValidateTenderStatus(v interface{}, param string) error {
+// ValidateTenderStatus validates tender status.
+func ValidateTenderStatus(v interface{}, _ string) error {
 	st := reflect.ValueOf(v)
 	if st.Kind() != reflect.String {
 		return validator.ErrUnsupported

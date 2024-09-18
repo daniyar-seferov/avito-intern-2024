@@ -8,33 +8,36 @@ import (
 
 type (
 	repository interface {
-		GetUserOrganizationId(ctx context.Context, username string) (string, string, error)
-		GetTender(ctx context.Context, tenderId string) (domain.TenderDTO, error)
+		GetUserOrganizationID(ctx context.Context, username string) (string, string, error)
+		GetTender(ctx context.Context, tenderID string) (domain.TenderDTO, error)
 	}
 
+	// Handler struct for GET StatusTender.
 	Handler struct {
 		repo repository
 	}
 )
 
+// New returns GET StatusTender handler.
 func New(repo repository) *Handler {
 	return &Handler{
 		repo: repo,
 	}
 }
 
-func (h *Handler) StatusTender(ctx context.Context, username string, tenderId string) (string, error) {
-	uid, organizationID, err := h.repo.GetUserOrganizationId(ctx, username)
+// StatusTender returns tender status.
+func (h *Handler) StatusTender(ctx context.Context, username string, tenderID string) (string, error) {
+	uid, organizationID, err := h.repo.GetUserOrganizationID(ctx, username)
 	if err != nil {
 		return "", err
 	}
 
-	tenderDB, err := h.repo.GetTender(ctx, tenderId)
+	tenderDB, err := h.repo.GetTender(ctx, tenderID)
 	if err != nil {
 		return "", err
 	}
 
-	if uid != tenderDB.UserId || organizationID != tenderDB.OrganizationId {
+	if uid != tenderDB.UserID || organizationID != tenderDB.OrganizationID {
 		return "", app_errors.ErrUserPermissions
 	}
 

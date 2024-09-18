@@ -14,15 +14,17 @@ import (
 
 type (
 	editTenderCommand interface {
-		EditTender(ctx context.Context, username string, tenderId string, tender domain.TenderEditRequest) (domain.TenderResponse, error)
+		EditTender(ctx context.Context, username string, tenderID string, tender domain.TenderEditRequest) (domain.TenderResponse, error)
 	}
 
+	// EditHandler edit handler struct.
 	EditHandler struct {
 		name              string
 		editTenderCommand editTenderCommand
 	}
 )
 
+// NewTendersEditHandler returns EditHandler.
 func NewTendersEditHandler(command editTenderCommand, name string) *EditHandler {
 	return &EditHandler{
 		name:              name,
@@ -39,7 +41,7 @@ func (h *EditHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	queryFromURL := r.URL.Query()
 	username := queryFromURL.Get("username")
-	tenderId := r.PathValue("tenderId")
+	tenderID := r.PathValue("tenderId")
 
 	if username == "" {
 		GetErrorResponse(w, h.name, app_errors.ErrInvalidUser, http.StatusBadRequest)
@@ -56,7 +58,7 @@ func (h *EditHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		GetErrorResponse(w, h.name, err, http.StatusBadRequest)
 		return
 	}
-	r.Body.Close()
+	_ = r.Body.Close()
 
 	if err = validator.Validate(request); err != nil {
 		GetErrorResponse(w, h.name, err, http.StatusBadRequest)
@@ -66,7 +68,7 @@ func (h *EditHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	resp, err := h.editTenderCommand.EditTender(
 		ctx,
 		username,
-		tenderId,
+		tenderID,
 		request,
 	)
 	if err != nil {

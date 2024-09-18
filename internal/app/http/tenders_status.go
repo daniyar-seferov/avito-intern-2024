@@ -9,15 +9,17 @@ import (
 
 type (
 	statusTenderCommand interface {
-		StatusTender(ctx context.Context, username string, tenderId string) (string, error)
+		StatusTender(ctx context.Context, username string, tenderID string) (string, error)
 	}
 
+	// StatusHandler tender status struct.
 	StatusHandler struct {
 		name                string
 		statusTenderCommand statusTenderCommand
 	}
 )
 
+// NewTendersStatusHandler returns StatusHandler.
 func NewTendersStatusHandler(command statusTenderCommand, name string) *StatusHandler {
 	return &StatusHandler{
 		name:                name,
@@ -33,7 +35,7 @@ func (h *StatusHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	queryFromURL := r.URL.Query()
 	username := queryFromURL.Get("username")
-	tenderId := r.PathValue("tenderId")
+	tenderID := r.PathValue("tenderId")
 
 	if username == "" {
 		GetErrorResponse(w, h.name, app_errors.ErrInvalidUser, http.StatusBadRequest)
@@ -43,7 +45,7 @@ func (h *StatusHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	resp, err := h.statusTenderCommand.StatusTender(
 		ctx,
 		username,
-		tenderId,
+		tenderID,
 	)
 	if err != nil {
 		switch err {
@@ -53,7 +55,7 @@ func (h *StatusHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		case app_errors.ErrUserPermissions:
 			GetErrorResponse(w, h.name, err, http.StatusForbidden)
 			return
-		case app_errors.ErrInvalidTenderId:
+		case app_errors.ErrInvalidTenderID:
 			GetErrorResponse(w, h.name, err, http.StatusNotFound)
 			return
 		default:
