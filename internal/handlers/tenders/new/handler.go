@@ -6,7 +6,6 @@ import (
 	"avito/tender/internal/handlers"
 	"context"
 	"fmt"
-	"strings"
 )
 
 type (
@@ -40,7 +39,7 @@ func (h *Handler) AddTender(ctx context.Context, tender domain.TenderAddRequest)
 	tenderDTO := domain.TenderDTO{
 		Name:           tender.Name,
 		Description:    tender.Description,
-		ServiceType:    strings.ToUpper(tender.ServiceType),
+		ServiceType:    handlers.ConvertServiceTypeReqToServiceTypeDB(tender.ServiceType),
 		OrganizationId: tender.OrganizationId,
 		UserId:         uid,
 	}

@@ -6,9 +6,15 @@ type (
 	TenderAddRequest struct {
 		Name            string `json:"name" validate:"nonzero"`
 		Description     string `json:"description" validate:"nonzero"`
-		ServiceType     string `json:"serviceType" validate:"nonzero"`
+		ServiceType     string `json:"serviceType" validate:"nonzero, servicetype"`
 		OrganizationId  string `json:"organizationId" validate:"nonzero"`
 		CreatorUsername string `json:"creatorUsername" validate:"nonzero"`
+	}
+
+	TenderEditRequest struct {
+		Name        string `json:"name" validate:"nonzero"`
+		Description string `json:"description" validate:"nonzero"`
+		ServiceType string `json:"serviceType" validate:"nonzero, servicetype"`
 	}
 
 	TenderResponse struct {

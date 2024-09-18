@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"avito/tender/internal/domain"
+	"strings"
 	"time"
 )
 
@@ -15,4 +16,12 @@ func ConvertTenderDTOToTenderResponse(tender domain.TenderDTO) domain.TenderResp
 		Version:     tender.Version,
 		CreatedAt:   tender.CreatedAt.Format(time.RFC3339),
 	}
+}
+
+func ConvertServiceTypeReqToServiceTypeDB(serviceType string) string {
+	return strings.ToUpper(serviceType)
+}
+
+func ConvertTenderStatusReqToTenderStatusDB(status string) string {
+	return strings.ToUpper(status)
 }

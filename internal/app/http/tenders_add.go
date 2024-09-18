@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strings"
 
 	"gopkg.in/validator.v2"
 )
@@ -52,12 +51,6 @@ func (h *AddHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	if err = validator.Validate(request); err != nil {
 		GetErrorResponse(w, h.name, err, http.StatusBadRequest)
-		return
-	}
-
-	serviceType := strings.ToUpper(request.ServiceType)
-	if _, inMap := domain.ServiceTypeMap[serviceType]; !inMap {
-		GetErrorResponse(w, h.name, fmt.Errorf("invalid service type"), http.StatusBadRequest)
 		return
 	}
 

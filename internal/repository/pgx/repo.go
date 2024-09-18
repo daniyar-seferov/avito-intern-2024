@@ -180,7 +180,20 @@ func (r *Repo) InTx(ctx context.Context, f func(tx pgx.Tx) error) error {
 	return tx.Commit(ctx)
 }
 
-func (r *Repo) ChangeTenderStatus(ctx context.Context, tenderId, status string) (domain.TenderDTO, error) {
+func (r *Repo) SetTenderRevision(ctx context.Context, tender domain.TenderDTO) error {
+	const query = `
+	INSERT INTO tender_revision (tender_id, organization_id, user_id, name, description, status, type, version, created_at, updated_at) 
+	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10);`
+
+	_, err := r.conn.Exec(ctx, query, tender.ID, tender.OrganizationId, tender.UserId, tender.Name, tender.Description, tender.Status, tender.ServiceType, tender.Version, tender.CreatedAt, tender.UpdatedAt)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *Repo) UpdateTender(ctx context.Context, tenderId string, tenderDTO domain.TenderDTO) (domain.TenderDTO, error) {
 	var tenderDB domain.TenderDTO
 
 	err := r.InTx(ctx, func(tx pgx.Tx) error {
@@ -195,7 +208,7 @@ func (r *Repo) ChangeTenderStatus(ctx context.Context, tenderId, status string) 
 			return err
 		}
 
-		tenderDB, err = r.UpdateTenderStatus(ctx, tenderId, status)
+		tenderDB, err = r.UpdateTenderByID(ctx, tenderId, tenderDTO)
 		if err != nil {
 			return err
 		}
@@ -206,27 +219,38 @@ func (r *Repo) ChangeTenderStatus(ctx context.Context, tenderId, status string) 
 	return tenderDB, err
 }
 
-func (r *Repo) SetTenderRevision(ctx context.Context, tender domain.TenderDTO) error {
-	const query = `
-	INSERT INTO tender_revision (tender_id, organization_id, user_id, name, description, status, type, version, created_at, updated_at) 
-	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10);`
+func (r *Repo) UpdateTenderByID(ctx context.Context, tenderId string, tenderDTO domain.TenderDTO) (domain.TenderDTO, error) {
+	var (
+		args     []interface{}
+		tenderDB domain.TenderDTO
+	)
+	args = append(args, tenderId)
 
-	_, err := r.conn.Exec(ctx, query, tender.ID, tender.OrganizationId, tender.UserId, tender.Name, tender.Description, tender.Status, tender.ServiceType, tender.Version, tender.CreatedAt, tender.UpdatedAt)
-	if err != nil {
-		return err
+	var query = `
+	UPDATE tender SET version=version + 1, updated_at=CURRENT_TIMESTAMP`
+
+	if tenderDTO.Name != "" {
+		query += ", name=$" + fmt.Sprint(len(args)+1)
+		args = append(args, tenderDTO.Name)
+	}
+	if tenderDTO.Description != "" {
+		query += ", description=$" + fmt.Sprint(len(args)+1)
+		args = append(args, tenderDTO.Description)
+	}
+	if tenderDTO.Status != "" {
+		query += ", status=$" + fmt.Sprint(len(args)+1)
+		args = append(args, tenderDTO.Status)
+	}
+	if tenderDTO.ServiceType != "" {
+		query += ", type=$" + fmt.Sprint(len(args)+1)
+		args = append(args, tenderDTO.ServiceType)
 	}
 
-	return nil
-}
-
-func (r *Repo) UpdateTenderStatus(ctx context.Context, tenderId, status string) (domain.TenderDTO, error) {
-	const query = `
-	UPDATE tender SET status=$1, version=version + 1, updated_at=CURRENT_TIMESTAMP WHERE id=$2
+	query += `
+	WHERE id=$1
 	RETURNING id, organization_id, user_id, name, description, status, type, version, created_at, updated_at;`
 
-	tenderDB := domain.TenderDTO{}
-
-	err := r.conn.QueryRow(ctx, query, status, tenderId).
+	err := r.conn.QueryRow(ctx, query, args...).
 		Scan(&tenderDB.ID, &tenderDB.OrganizationId, &tenderDB.UserId, &tenderDB.Name, &tenderDB.Description, &tenderDB.Status, &tenderDB.ServiceType, &tenderDB.Version, &tenderDB.CreatedAt, &tenderDB.UpdatedAt)
 	if err != nil {
 		return tenderDB, err

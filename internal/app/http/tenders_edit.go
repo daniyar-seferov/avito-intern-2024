@@ -6,38 +6,39 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 
 	"gopkg.in/validator.v2"
 )
 
 type (
-	changeStatusTenderCommand interface {
-		ChangeStatusTender(ctx context.Context, username, tenderId, status string) (domain.TenderResponse, error)
+	editTenderCommand interface {
+		EditTender(ctx context.Context, username string, tenderId string, tender domain.TenderEditRequest) (domain.TenderResponse, error)
 	}
 
-	ChangeStatusHandler struct {
-		name                      string
-		changeStatusTenderCommand changeStatusTenderCommand
+	EditHandler struct {
+		name              string
+		editTenderCommand editTenderCommand
 	}
 )
 
-func NewTendersChangeStatusHandler(command changeStatusTenderCommand, name string) *ChangeStatusHandler {
-	return &ChangeStatusHandler{
-		name:                      name,
-		changeStatusTenderCommand: command,
+func NewTendersEditHandler(command editTenderCommand, name string) *EditHandler {
+	return &EditHandler{
+		name:              name,
+		editTenderCommand: command,
 	}
 }
 
-func (h *ChangeStatusHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *EditHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var (
-		ctx = r.Context()
-		err error
+		ctx     = r.Context()
+		request domain.TenderEditRequest
+		err     error
 	)
 
 	queryFromURL := r.URL.Query()
 	username := queryFromURL.Get("username")
-	status := queryFromURL.Get("status")
 	tenderId := r.PathValue("tenderId")
 
 	if username == "" {
@@ -45,27 +46,36 @@ func (h *ChangeStatusHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	if err = validator.Valid(status, "tenderstatus"); err != nil {
+	request = domain.TenderEditRequest{}
+	err = json.NewDecoder(r.Body).Decode(&request)
+	if err == io.EOF {
+		GetErrorResponse(w, h.name, fmt.Errorf("invalid json"), http.StatusBadRequest)
+		return
+	}
+	if err != nil {
+		GetErrorResponse(w, h.name, err, http.StatusBadRequest)
+		return
+	}
+	r.Body.Close()
+
+	if err = validator.Validate(request); err != nil {
 		GetErrorResponse(w, h.name, err, http.StatusBadRequest)
 		return
 	}
 
-	resp, err := h.changeStatusTenderCommand.ChangeStatusTender(
+	resp, err := h.editTenderCommand.EditTender(
 		ctx,
 		username,
 		tenderId,
-		status,
+		request,
 	)
 	if err != nil {
 		switch err {
 		case app_errors.ErrInvalidUser:
 			GetErrorResponse(w, h.name, err, http.StatusUnauthorized)
 			return
-		case app_errors.ErrUserPermissions:
+		case app_errors.ErrInvalidOrganization:
 			GetErrorResponse(w, h.name, err, http.StatusForbidden)
-			return
-		case app_errors.ErrInvalidTenderId:
-			GetErrorResponse(w, h.name, err, http.StatusNotFound)
 			return
 		default:
 			fmt.Println(err)

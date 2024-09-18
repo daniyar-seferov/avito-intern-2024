@@ -9,6 +9,7 @@ import (
 
 	appHttp "avito/tender/internal/app/http"
 	"avito/tender/internal/domain"
+	tenders_edit "avito/tender/internal/handlers/tenders/edit"
 	tenders_list "avito/tender/internal/handlers/tenders/list"
 	tenders_my "avito/tender/internal/handlers/tenders/my"
 	tenders_new "avito/tender/internal/handlers/tenders/new"
@@ -17,6 +18,7 @@ import (
 	db_pgx_repo "avito/tender/internal/repository/pgx"
 
 	pgxv5 "github.com/jackc/pgx/v5"
+	validate "gopkg.in/validator.v2"
 )
 
 type (
@@ -33,7 +35,7 @@ type (
 		GetTender(ctx context.Context, tenderId string) (domain.TenderDTO, error)
 		GetTenderList(ctx context.Context, serviceTypes []string, limit int, offset int) ([]domain.TenderDTO, error)
 		GetUsersTenders(ctx context.Context, username string, limit int, offset int) ([]domain.TenderDTO, error)
-		ChangeTenderStatus(ctx context.Context, tenderId, status string) (domain.TenderDTO, error)
+		UpdateTender(ctx context.Context, tenderId string, tenderDTO domain.TenderDTO) (domain.TenderDTO, error)
 	}
 
 	App struct {
@@ -59,6 +61,9 @@ func NewApp(config config) (*App, error) {
 		return nil, err
 	}
 
+	validate.SetValidationFunc("servicetype", appHttp.ValidateServiceType)
+	validate.SetValidationFunc("tenderstatus", appHttp.ValidateTenderStatus)
+
 	return &App{
 		config:  config,
 		mux:     mux,
@@ -75,6 +80,7 @@ func (a *App) ListenAndServe() error {
 	a.mux.Handle(a.config.path.tendersMy, appHttp.NewTendersMyHandler(tenders_my.New(a.storage), a.config.path.tendersList))
 	a.mux.Handle(a.config.path.tendersStatus, appHttp.NewTendersStatusHandler(tenders_status.New(a.storage), a.config.path.tendersStatus))
 	a.mux.Handle(a.config.path.tendersChangeStatus, appHttp.NewTendersChangeStatusHandler(tenders_change_status.New(a.storage), a.config.path.tendersChangeStatus))
+	a.mux.Handle(a.config.path.tendersEdit, appHttp.NewTendersEditHandler(tenders_edit.New(a.storage), a.config.path.tendersEdit))
 
 	return a.server.ListenAndServe()
 }
